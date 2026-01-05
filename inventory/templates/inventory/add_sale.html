@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Sale | Helmet Inventory</title>
+    <link rel="stylesheet" href="{% static 'inventory/style.css' %}">
+    <style>
+        /* Specific fix for Django's as_p output to match our spacing */
+        .django-form-body p {
+            margin-bottom: 20px;
+        }
+
+        .django-form-body span.helptext {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <div class="form-card">
+            <div class="form-header">
+                <h1>Record Sale</h1>
+                <p style="color: var(--text-muted); margin-top: 8px;">Log a new transaction into the system</p>
+            </div>
+
+            {% if form.errors %}
+            <div class="errorlist">
+                {{ form.errors }}
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="django-form-body">
+                    {{ form.as_p }}
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 32px;">
+                    Confirm Sale
+                </button>
+            </form>
+
+            <a href="{% url 'dashboard' %}" class="back-link">
+                ← Return to Dashboard
+            </a>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Helmet Inventory</title>
+    <link rel="stylesheet" href="{% static 'inventory/style.css' %}">
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <!-- Header -->
+        <header class="header">
+            <h1>Helmet Inventory System</h1>
+            <div style="font-size: 0.9rem; color: var(--text-muted);">
+                Inventory & Sales Management
+            </div>
+        </header>
+
+        <!-- Summary Section -->
+        <div class="dashboard-grid">
+            <!-- Inventory Stats -->
+            <div class="card">
+                <h3>Inventory Status</h3>
+                <ul class="stat-group">
+                    <li class="stat-item">
+                        <span class="stat-label">Total Products</span>
+                        <span class="stat-value">{{ total_products|default:"0" }}</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Total Items Added</span>
+                        <span class="stat-value">{{ total_inventory_added|default:"0" }}</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Current Stock</span>
+                        <span class="stat-value">{{ total_stock|default:"0" }}</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Stock Value</span>
+                        <span class="stat-value">MVR {{ total_inventory_value|default:"0.00"|floatformat:2 }}</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Financial Stats -->
+            <div class="card">
+                <h3>Financial Overview</h3>
+                <ul class="stat-group">
+                    <li class="stat-item">
+                        <span class="stat-label">Total Sales</span>
+                        <span class="stat-value">MVR {{ total_sales|default:"0.00" }}</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Total Profit</span>
+                        <span class="stat-value" style="color: var(--success-color);">
+                            MVR {{ total_profit|default:"0.00" }}
+                        </span>
+                    </li>
+                    <li class="stat-item" style="border-top: 1px solid #eee; margin-top: 8px; padding-top: 8px;">
+                        <span class="stat-label">Total Drawings</span>
+                        <span class="stat-value" style="color: var(--danger-color);">
+                            (MVR {{ total_drawings|default:"0.00" }})
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Bank Stats -->
+            <div class="card">
+                <h3>Banking & Cash</h3>
+                <ul class="stat-group">
+                    <li class="stat-item">
+                        <span class="stat-label">Total Bank Balance</span>
+                        <span class="stat-value">MVR {{ total_bank_balance|default:"0.00"|floatformat:2 }}</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Active Accounts</span>
+                        <span class="stat-value">{{ bank_accounts.count }}</span>
+                    </li>
+                </ul>
+                <div style="margin-top: 16px;">
+                    <a href="{% url 'bank_dashboard' %}" class="btn btn-secondary"
+                        style="width: 100%; text-align: center; display: block;">View Details & Actions</a>
+                </div>
+            </div>
+
+            <!-- Historical Stats -->
+            <div class="card" style="border: 1px dashed var(--text-muted); background-color: #fafafa;">
+                <h3>📜 Historical Data</h3>
+                <ul class="stat-group">
+                    <li class="stat-item">
+                        <span class="stat-label">Calculated Profit</span>
+                        <span class="stat-value" style="color: #666;">
+                            MVR {{ total_historical_profit|default:"0.00"|floatformat:2 }}
+                        </span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Total Revenue</span>
+                        <span class="stat-value" style="color: #666;">
+                            MVR {{ total_historical_sales|default:"0.00"|floatformat:2 }}
+                        </span>
+                    </li>
+                </ul>
+                <div style="margin-top: 16px;">
+                    <a href="{% url 'historical_sales_list' %}" class="btn btn-secondary"
+                        style="width: 100%; text-align: center; display: block;">Manage History</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="actions-container">
+            <a href="{% url 'add_sale' %}" class="btn btn-primary">
+                + New Sale
+            </a>
+            <a href="{% url 'add_stock' %}" class="btn btn-secondary">
+                + Add Inventory
+            </a>
+        </div>
+
+        <!-- Products Table -->
+        <h3 class="page-title" style="margin-bottom: 16px; font-size: 1.25rem;">Product Inventory</h3>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Brand</th>
+                        <th>Size</th>
+                        <th>Color</th>
+                        <th>Stock Level</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td style="font-weight: 500;">{{ product.name }}</td>
+                        <td>{{ product.brand }}</td>
+                        <td>{{ product.size }}</td>
+                        <td>
+                            <span class="color-dot"></span>
+                            {{ product.color }}
+                        </td>
+                        <td>{{ product.quantity }}</td>
+                        <td>
+                            {% if product.quantity <= product.reorder_level %} <span class="badge badge-low-stock">Low
+                                Stock</span>
+                                {% else %}
+                                <span class="badge badge-ok">In Stock</span>
+                                {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                            No products found in inventory. Start by adding stock.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

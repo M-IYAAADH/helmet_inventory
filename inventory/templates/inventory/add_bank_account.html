@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Bank Account | Helmet Inventory</title>
+    <link rel="stylesheet" href="{% static 'inventory/style.css' %}">
+    <style>
+        .form-card {
+            max-width: 500px;
+            margin: 40px auto;
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #eee;
+        }
+
+        .form-header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .django-form-body p {
+            margin-bottom: 20px;
+        }
+
+        .django-form-body input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-top: 4px;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 24px;
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <div class="form-card">
+            <div class="form-header">
+                <h1>Add Bank Account</h1>
+                <p style="color: var(--text-muted); margin-top: 8px;">Register a new bank or cash account</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="django-form-body">
+                    {{ form.as_p }}
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" style="width: 100%; margin-top: 32px;">
+                    Create Account
+                </button>
+            </form>
+
+            <a href="{% url 'bank_dashboard' %}" class="back-link">
+                ← Return to Bank Dashboard
+            </a>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

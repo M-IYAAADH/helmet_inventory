@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Historical Sale | Helmet Inventory</title>
+    <link rel="stylesheet" href="{% static 'inventory/style.css' %}">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>Record Historical Sale</h1>
+            <a href="{% url 'historical_sales_list' %}" class="btn btn-secondary">Cancel</a>
+        </header>
+
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <div class="badge badge-low-stock" style="margin-bottom: 20px; display: inline-block;">
+                WARNING: This is for LEGACY data only.
+                It does NOT affect current inventory or bank balance.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ form.as_p }}
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">Save Legacy
+                    Record</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historical Sales | Helmet Inventory</title>
+    <link rel="stylesheet" href="{% static 'inventory/style.css' %}">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>Historical / Legacy Sales</h1>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>Legacy Overview</h3>
+                <ul class="stat-group">
+                    <li class="stat-item">
+                        <span class="stat-label">Total Legacy Sales</span>
+                        <span class="stat-value">MVR {{ total_revenue|floatformat:2 }}</span>
+                    </li>
+                    <li class="stat-item">
+                        <span class="stat-label">Total Legacy Profit</span>
+                        <span class="stat-value" style="color: var(--success-color);">
+                            MVR {{ total_profit|floatformat:2 }}
+                        </span>
+                    </li>
+                </ul>
+                <div style="margin-top: 16px;">
+                    <a href="{% url 'add_historical_sale' %}" class="btn btn-primary"
+                        style="width: 100%; text-align: center; display: block;">+ Add Manual Record</a>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="page-title" style="margin-top: 32px;">Records</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Product / SKU</th>
+                        <th>Qty</th>
+                        <th>Unit Cost</th>
+                        <th>Sold At</th>
+                        <th>Profit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td>{{ sale.date|date:"Y-m-d" }}</td>
+                        <td>
+                            <b>{{ sale.product_name }}</b><br>
+                            <span style="font-size: 0.8em; color: var(--text-muted);">{{ sale.sku }}</span>
+                        </td>
+                        <td>{{ sale.quantity }}</td>
+                        <td>MVR {{ sale.unit_cost }}</td>
+                        <td>MVR {{ sale.selling_price }}</td>
+                        <td style="color: var(--success-color);">MVR {{ sale.profit|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted);">No historical records
+                            found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>

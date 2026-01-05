@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Drawing | Helmet Inventory</title>
+    <link rel="stylesheet" href="{% static 'inventory/style.css' %}">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>Record Owner Drawing</h1>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </header>
+
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <div class="badge badge-low-stock" style="margin-bottom: 20px; display: inline-block;">
+                Note: This creates an EQUITY withdrawal. It reduces Bank Balance but NOT Profit.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ form.as_p }}
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">Record
+                    Withdrawal</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

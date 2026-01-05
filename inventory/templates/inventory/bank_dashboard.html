@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Dashboard | Helmet Inventory</title>
+    <link rel="stylesheet" href="{% static 'inventory/style.css' %}">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>Bank & Cash Dashboard</h1>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Main Dashboard</a>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Accounts Overview -->
+            <div class="card">
+                <h3>Accounts</h3>
+                <ul class="stat-group">
+                    {% for account in accounts %}
+                    <li class="stat-item">
+                        <span class="stat-label">{{ account.name }}</span>
+                        <span class="stat-value">MVR {{ account.balance|floatformat:2 }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="stat-item">
+                        <span class="stat-value">No Accounts Created</span>
+                    </li>
+                    {% endfor %}
+                    <li class="stat-item" style="border-top: 1px solid #eee; margin-top: 8px; padding-top: 8px;">
+                        <span class="stat-label">Total Liquid Cash</span>
+                        <span class="stat-value">MVR {{ total_balance|floatformat:2 }}</span>
+                    </li>
+                </ul>
+                <div style="margin-top: 16px; display: flex; gap: 8px;">
+                    <a href="{% url 'add_bank_transaction' %}" class="btn btn-primary"
+                        style="flex: 1; text-align: center;">+ Transaction</a>
+                    <a href="{% url 'add_bank_account' %}" class="btn btn-secondary"
+                        style="flex: 1; text-align: center;">+ New Account</a>
+                    <a href="{% url 'add_owner_drawing' %}" class="btn btn-secondary"
+                        style="flex: 1; text-align: center;">Owner Draw</a>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="page-title" style="margin-top: 32px;">Recent Transactions</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Account</th>
+                        <th>Type</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in recent_transactions %}
+                    <tr>
+                        <td>{{ txn.date|date:"Y-m-d H:i" }}</td>
+                        <td>{{ txn.bank_account.name }}</td>
+                        <td>
+                            {% if txn.transaction_type == 'in' %}
+                            <span class="badge badge-ok">IN</span>
+                            {% else %}
+                            <span class="badge badge-low-stock">OUT</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ txn.get_category_display }}</td>
+                        <td>MVR {{ txn.amount|floatformat:2 }}</td>
+                        <td>{{ txn.description }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted);">No transactions found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>
