@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.contrib.auth.views import LoginView
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from .models import Product, StockOut, StockIn, BankAccount, BankTransaction, OwnerDrawing, HistoricalSale
+from .models import Product, Sale, StockIn, BankAccount, BankTransaction, OwnerDrawing
 from .forms import SaleForm, StockInForm, BankTransactionForm, OwnerDrawingForm, HistoricalSaleForm, BankAccountForm
 
 class CustomLoginView(LoginView):
@@ -17,52 +17,37 @@ def logout_view(request):
 @login_required
 def dashboard(request):
     products = Product.objects.all()
-    sales = StockOut.objects.all()
-    try:
-        stock_ins = StockIn.objects.all()
-    except Exception:
-        stock_ins = []
     
-    # Bank Summary
+    # Financial Aggregation (Unified: Normal + Historical)
+    financial_data = Sale.objects.aggregate(
+        total_revenue=Sum(F('selling_price') * F('quantity')),
+        total_profit=Sum('profit')
+    )
+    
+    total_sales = financial_data['total_revenue'] or Decimal('0.00')
+    total_profit = financial_data['total_profit'] or Decimal('0.00')
+
+    # Bank Balance Summary
     bank_accounts = BankAccount.objects.all()
     total_bank_balance = sum(acc.balance for acc in bank_accounts)
     
-    # Owner Drawings
-    drawings = OwnerDrawing.objects.all()
-    total_drawings = sum(d.amount for d in drawings)
-
-    # Historical / Legacy Data
-    sales_hist = HistoricalSale.objects.all()
-    total_historical_sales = sum(s.total_revenue for s in sales_hist)
-    total_historical_profit = sum(s.profit for s in sales_hist)
-
-    total_products = products.count()
+    drawings_data = OwnerDrawing.objects.aggregate(total=Sum('amount'))
+    total_drawings = drawings_data['total'] or Decimal('0.00')
     
-    total_stock = sum(p.quantity for p in products)
+    total_products = products.count()
+    total_stock = products.aggregate(total=Sum('quantity'))['total'] or 0
     total_inventory_value = sum(p.quantity * p.average_cost for p in products)
     
-    # Check if stock_ins exist to avoid error if empty
-    if stock_ins:
-        total_inventory_added = sum(s.quantity for s in stock_ins)
-    else:
-        total_inventory_added = 0
-    
-    total_sales = sum(s.total_sale() for s in sales)
-    total_profit = sum(s.profit() for s in sales)
-
     context = {
         'products': products,
         'total_products': total_products,
         'total_stock': total_stock,
         'total_inventory_value': total_inventory_value,
-        'total_inventory_added': total_inventory_added,
         'total_sales': total_sales,
         'total_profit': total_profit,
         'bank_accounts': bank_accounts,
         'total_bank_balance': total_bank_balance,
         'total_drawings': total_drawings,
-        'total_historical_sales': total_historical_sales,
-        'total_historical_profit': total_historical_profit,
     }
 
     return render(request, 'inventory/dashboard.html', context)
@@ -145,15 +130,17 @@ def add_stock(request):
 
 @login_required
 def historical_sales_list(request):
-    sales = HistoricalSale.objects.order_by('-date')
+    sales = Sale.objects.filter(is_historical=True).order_by('-created_at')
     
-    total_revenue = sum(s.total_revenue for s in sales)
-    total_profit = sum(s.profit for s in sales)
+    stats = sales.aggregate(
+        total_revenue=Sum(F('selling_price') * F('quantity')),
+        total_profit=Sum('profit')
+    )
     
     return render(request, 'inventory/historical_sales_list.html', {
         'sales': sales,
-        'total_revenue': total_revenue,
-        'total_profit': total_profit,
+        'total_revenue': stats['total_revenue'] or 0,
+        'total_profit': stats['total_profit'] or 0,
     })
 
 @login_required

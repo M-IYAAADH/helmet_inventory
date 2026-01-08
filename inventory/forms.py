@@ -1,9 +1,9 @@
 from django import forms
-from .models import StockOut, StockIn, BankTransaction, OwnerDrawing, BankAccount
+from .models import Sale, StockIn, BankTransaction, OwnerDrawing, BankAccount
 
 class SaleForm(forms.ModelForm):
     class Meta:
-        model = StockOut
+        model = Sale
         fields = ['product', 'quantity', 'selling_price', 'payment_method', 'bank_account', 'reference']
         widgets = {
              # Hide bank_account initially or let user leave blank if Cash
@@ -81,17 +81,20 @@ class BankAccountForm(forms.ModelForm):
             'name': 'Account Name'
         }
 
-from .models import HistoricalSale
 
 class HistoricalSaleForm(forms.ModelForm):
     class Meta:
-        model = HistoricalSale
-        fields = ['date', 'sku', 'product_name', 'quantity', 'unit_cost', 'selling_price', 'reference']
+        model = Sale
+        fields = ['product', 'quantity', 'unit_cost', 'selling_price', 'is_historical', 'reference']
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date'}),
             'unit_cost': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
             'selling_price': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
+            'is_historical': forms.HiddenInput(),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['is_historical'].initial = True
     
     def clean_quantity(self):
         qty = self.cleaned_data.get('quantity')

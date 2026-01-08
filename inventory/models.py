@@ -142,31 +142,44 @@ class StockIn(models.Model):
         return f"IN: {self.product.name} (+{self.quantity})"
 
 
-class StockOut(models.Model):
+class Sale(models.Model):
     PAYMENT_METHODS = [
         ('cash', 'Cash'),
         ('transfer', 'Bank Transfer'),
     ]
 
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(
+        Product, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
     quantity = models.PositiveIntegerField()
-    selling_price = models.DecimalField(max_digits=10, decimal_places=2)
     
-    # New: Lock in the cost at the moment of sale
-    # This is critical for accurate historical profit reports
-    cost_at_sale = models.DecimalField(
+    # unit_cost acts as the cost basis
+    unit_cost = models.DecimalField(
         max_digits=10, 
         decimal_places=2,
-        editable=False, # Automatically set by system
+        default=0.00
+    )
+    
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # stored profit for easier aggregation
+    profit = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
         default=0.00
     )
 
+    is_historical = models.BooleanField(default=False)
+
     payment_method = models.CharField(
         max_length=20,
-        choices=PAYMENT_METHODS
+        choices=PAYMENT_METHODS,
+        default='cash'
     )
     
-    # New: Link to bank account for transfer payments
     bank_account = models.ForeignKey(
         BankAccount, 
         on_delete=models.SET_NULL, 
@@ -181,46 +194,13 @@ class StockOut(models.Model):
         null=True
     )
 
-    date = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def total_sale(self):
         return self.quantity * self.selling_price
 
-    def profit(self):
-        # Profit = (Selling Price - Cost Basis) * Quantity
-        current_cost = self.cost_at_sale
-        return (self.selling_price - current_cost) * self.quantity
-        
     def __str__(self):
-        return f"OUT: {self.product.name} (-{self.quantity})"
+        if self.product:
+            return f"SALE: {self.product.name} (-{self.quantity})"
+        return f"SALE: Manual/Historical Entry ({self.id})"
 
-class HistoricalSale(models.Model):
-    """
-    Stores legacy/manual sales data.
-    COMPLETELY INDEPENDENT from Product inventory and Bank Balance.
-    Used for historical reporting only.
-    """
-    date = models.DateField(help_text="Date of the original sale")
-    sku = models.CharField(max_length=50)
-    product_name = models.CharField(max_length=100)
-    quantity = models.PositiveIntegerField()
-    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, help_text="Original Cost Price per unit")
-    selling_price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Original Selling Price per unit")
-    reference = models.CharField(max_length=100, blank=True, null=True, help_text="e.g. Old Invoice #")
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    @property
-    def total_revenue(self):
-        return self.quantity * self.selling_price
-
-    @property
-    def total_cost(self):
-        return self.quantity * self.unit_cost
-
-    @property
-    def profit(self):
-        return self.total_revenue - self.total_cost
-
-    def __str__(self):
-        return f"HIST: {self.product_name} ({self.date})"

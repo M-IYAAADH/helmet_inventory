@@ -1,6 +1,6 @@
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
-from .models import StockIn, StockOut
+from .models import StockIn, Sale
 from decimal import Decimal
 
 @receiver(post_save, sender=StockIn)
@@ -40,34 +40,40 @@ def process_stock_in(sender, instance, created, **kwargs):
         product.quantity = new_total_qty
         product.save()
 
-@receiver(pre_save, sender=StockOut)
+@receiver(pre_save, sender=Sale)
 def lock_cost_basis(sender, instance, **kwargs):
     """
     BEFORE saving a sale:
-    1. Lock in the current Product Average Cost as 'cost_at_sale'
+    1. Lock in the current Product Average Cost as 'unit_cost' if not historical
+    2. Calculate profit
     """
     if not instance.pk:  # Only on creation (new sale)
-        product = instance.product
-        # We lock the cost NOW, so future price changes don't affect this sale's profit record
-        instance.cost_at_sale = product.average_cost
+        if not instance.is_historical and instance.product:
+            # We lock the cost NOW, so future price changes don't affect this sale's profit record
+            instance.unit_cost = instance.product.average_cost
+        
+        # Calculate profit: (Selling Price - Unit Cost) * Quantity
+        instance.profit = (instance.selling_price - instance.unit_cost) * instance.quantity
 
-@receiver(post_save, sender=StockOut)
+@receiver(post_save, sender=Sale)
 def process_stock_out(sender, instance, created, **kwargs):
     """
     When stock leaves:
-    1. Decrease Product Quantity
+    1. Decrease Product Quantity (if NOT historical)
     2. If Transfer, add to Bank Balance
     """
     if created:
-        product = instance.product
-        if product.quantity >= instance.quantity:
-            product.quantity -= instance.quantity
-            product.save()
-        else:
-            product.quantity = 0 
-            product.save()
+        # 1. STOCK DEDUCTION (Only if NOT historical and product exists)
+        if not instance.is_historical and instance.product:
+            product = instance.product
+            if product.quantity >= instance.quantity:
+                product.quantity -= instance.quantity
+                product.save()
+            else:
+                product.quantity = 0 
+                product.save()
             
-        # Bank Logic
+        # 2. BANK LOGIC
         if instance.payment_method == 'transfer' and instance.bank_account:
             BankTransaction.objects.create(
                 bank_account=instance.bank_account,
@@ -76,7 +82,7 @@ def process_stock_out(sender, instance, created, **kwargs):
                 amount=instance.total_sale(),
                 description=f"Sale Ref: {instance.reference or 'N/A'}",
                 reference=instance.reference,
-                date=instance.date
+                date=instance.created_at
             )
 
 # ---------------------------------------------------------

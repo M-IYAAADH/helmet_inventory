@@ -44,7 +44,7 @@
                 <thead>
                     <tr>
                         <th>Date</th>
-                        <th>Product / SKU</th>
+                        <th>Product</th>
                         <th>Qty</th>
                         <th>Unit Cost</th>
                         <th>Sold At</th>
@@ -54,10 +54,18 @@
                 <tbody>
                     {% for sale in sales %}
                     <tr>
-                        <td>{{ sale.date|date:"Y-m-d" }}</td>
+                        <td>{{ sale.created_at|date:"Y-m-d" }}</td>
                         <td>
-                            <b>{{ sale.product_name }}</b><br>
-                            <span style="font-size: 0.8em; color: var(--text-muted);">{{ sale.sku }}</span>
+                            {% if sale.product %}
+                            <b>{{ sale.product.name }}</b><br>
+                            <span style="font-size: 0.8em; color: var(--text-muted);">{{ sale.product.sku }}</span>
+                            {% else %}
+                            <span style="color: var(--text-muted);">Manual Entry / No Product</span>
+                            {% if sale.reference %}
+                            <br><span style="font-size: 0.8em; color: var(--text-muted);">Ref: {{ sale.reference
+                                }}</span>
+                            {% endif %}
+                            {% endif %}
                         </td>
                         <td>{{ sale.quantity }}</td>
                         <td>MVR {{ sale.unit_cost }}</td>

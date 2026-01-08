@@ -88,24 +88,13 @@
                 </div>
             </div>
 
-            <!-- Historical Stats -->
+            <!-- Historical Data Link -->
             <div class="card" style="border: 1px dashed var(--text-muted); background-color: #fafafa;">
                 <h3>📜 Historical Data</h3>
-                <ul class="stat-group">
-                    <li class="stat-item">
-                        <span class="stat-label">Calculated Profit</span>
-                        <span class="stat-value" style="color: #666;">
-                            MVR {{ total_historical_profit|default:"0.00"|floatformat:2 }}
-                        </span>
-                    </li>
-                    <li class="stat-item">
-                        <span class="stat-label">Total Revenue</span>
-                        <span class="stat-value" style="color: #666;">
-                            MVR {{ total_historical_sales|default:"0.00"|floatformat:2 }}
-                        </span>
-                    </li>
-                </ul>
-                <div style="margin-top: 16px;">
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+                    View and manage manual entries or legacy sales records that don't affect live inventory.
+                </p>
+                <div style="margin-top: auto;">
                     <a href="{% url 'historical_sales_list' %}" class="btn btn-secondary"
                         style="width: 100%; text-align: center; display: block;">Manage History</a>
                 </div>
